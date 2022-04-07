@@ -11,26 +11,22 @@ public class RoadController : MonoBehaviour
     public List<GameObject> BossBricks;
     public List<GameObject> MiniBossBricks;
     public uint Size;
+    private GameObject lastBrick;
 
     void Start()
     {
-        List<GameObject> brickList = new List<GameObject>();
-        float distance = 0;
+        lastBrick = Instantiate(Bricks[Random.Range(0, Bricks.Count)]);
+        lastBrick.transform.parent = transform;
 
         for(int i = 0; i < Size; i++) {
-            GameObject temp;
-
-            if (i % 3 == 1) {
-                temp = Instantiate(MiniBossBricks[Random.Range(0, MiniBossBricks.Count)], new Vector3(0, 0, distance), new Quaternion());
+            if (Random.Range(0, 100) < 15) {
+                lastBrick = AddNewBrick(MiniBossBricks[Random.Range(0, MiniBossBricks.Count)], lastBrick);
             }
             else {
-                temp = Instantiate(Bricks[Random.Range(0, Bricks.Count)], new Vector3(0, 0, distance), new Quaternion());
+                lastBrick = AddNewBrick(Bricks[Random.Range(0, Bricks.Count)], lastBrick);
             }
 
-            BoxCollider box = FindBrickTriggerArea(temp).GetComponent<BoxCollider>();
-            temp.transform.parent = transform;
-            distance += box.size.z;
-            Debug.Log("Current distance = " + distance);
+            lastBrick.transform.parent = transform;
         }
     }
 
@@ -40,10 +36,19 @@ public class RoadController : MonoBehaviour
         
     }
 
-    GameObject FindBrickTriggerArea(GameObject obj) {
+    // Function to find specificlu bricks trigger areas
+    BoxCollider FindBrickTriggerArea(GameObject obj) {
         foreach(Transform t in obj.transform) {
-            if (t.tag == "BrickTrigger") return t.gameObject;
+            if (t.tag == "BrickTrigger") return t.GetComponent<BoxCollider>();
         }
         return null;
+    }
+
+    // Add new Brick to the road
+    GameObject AddNewBrick(GameObject type, GameObject previous) {
+        float spawnPoint = previous?.transform.position.z ?? 0;
+        spawnPoint += FindBrickTriggerArea(previous).size.z / 2;
+        spawnPoint += FindBrickTriggerArea(type).size.z / 2;
+        return Instantiate(type, new Vector3(0, 0, spawnPoint), new Quaternion());
     }
 }
